@@ -4,15 +4,21 @@
 #include "Client.h"
 #include "Rental.h"
 
+int searchEquipmentByID(char* id);
+int searchClientByID(char* id);
+int searchRentalByID(char* id);
+
 void inputEquipment(Equipment* self);
 int inputClient(Client* self);
 int inputRental(Rental* self);
+
 void addEquipment();
 void addClient();
-int searchEquipmentByID(char id[]);
 void createRentalOrder();
-double calculateLatePenalty(Rental rental, int actualReturnTime);
 void displayTotalRentalFees();
+void returnEquipment();
+double calculateLatePenalty(Rental rental, int actualReturnTime);
+
 void groupEquipmentByStatus();
 void sortRentalsByDuration();
 void sortRentalsByClientName();

@@ -9,6 +9,7 @@ typedef struct {
     int expectedReturnTime;
     int actualReturnTime;
     double equipmentCost;
+    double totalCostExpected;
     double totalCost;
 } Rental;
 
