@@ -24,7 +24,7 @@ void inputEquipment(Equipment* self) {
     self->name[strcspn(self->name, "\n")] = '\0';
     
     printf("Enter Rental Cost: ");
-    scanf("%lf", &self->cost);
+    scanf("%lf", &self->costPerHour);
     
     printf("Enter Power Rating: ");
     scanf("%lf", &self->powerRating);
@@ -85,7 +85,7 @@ int inputRental(Rental* self) {
     }
     
     //Update Rental Cost
-    self->equipmentCost = equipmentList[equipmentIndex].cost;
+    self->equipmentCost = equipmentList[equipmentIndex].costPerHour;
 
     //Enter Rental Time and Expected Return Time
     printf("Enter Start Time (hour): ");
@@ -93,6 +93,8 @@ int inputRental(Rental* self) {
 
     printf("Enter Expected Return Time (hour): ");
     scanf("%d", &self->expectedReturnTime);
+
+    self->totalCost = self->equipmentCost * (self->expectedReturnTime - self->starTime);
 
     return 1;
 }
@@ -165,7 +167,18 @@ void createRentalOrder() {
         printf("Rental order failed to create!\n");
 }
 
-//revenue statistics
+double calculateLatePenalty(Rental rental, int actualReturnTime) {
+    if (actualReturnTime > rental.expectedReturnTime) {
+        int lateTime = actualReturnTime - rental.expectedReturnTime;
+        double lateFee = lateTime * rental.equipmentCost * 1.5;
+        return lateFee;
+    }
+    return 0;
+}
+
 void displayTotalRentalFees() {
-    for ()
+    int totalRentalFees = 0;
+    for (int i = 0; i < rentalList; i++) {
+        totalRentalFees += rentalList->totalCostExpected + 
+    }
 }
