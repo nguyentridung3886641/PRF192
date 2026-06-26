@@ -8,6 +8,9 @@ int searchEquipmentByID(char* id);
 int searchClientByID(char* id);
 int searchRentalByID(char* id);
 
+void printDivider();
+void pauseScreen();
+
 void inputEquipment(Equipment* self);
 int inputClient(Client* self);
 int inputRental(Rental* self);
@@ -17,7 +20,7 @@ void addClient();
 void createRentalOrder();
 void displayTotalRentalFees();
 void returnEquipment();
-double calculateLatePenalty(Rental rental, int actualReturnTime);
+double calculateTotalFees(Rental* rental, int actualReturnTime);
 
 void groupEquipmentByStatus();
 void sortRentalsByDuration();

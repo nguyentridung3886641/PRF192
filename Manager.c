@@ -12,7 +12,7 @@ Rental rentalList[100];
 int rentalCount = 0;
 
 // ==========================================
-// CÁC HÀM TÌM KIẾM BỔ TRỢ (UTILITY FUNCTIONS)
+//            UTILITY FUNCTIONS
 // ==========================================
 
 int searchEquipmentByID(char* id) {
@@ -41,7 +41,7 @@ int searchRentalByID(char* id) {
 
 
 // ==========================================
-//          CÁC HÀM NHẬP DỮ LIỆU
+//          Data Input Functions
 // ==========================================
 
 void inputEquipment(Equipment* self) {
@@ -120,12 +120,12 @@ int inputRental(Rental* self) {
     self->equipmentCost = equipmentList[equipmentIndex].costPerHour;
 
     printf("Enter Start Time (Hour): ");
-    scanf("%d", &self->starTime);
+    scanf("%d", &self->startTime);
 
     printf("Enter Expected Return Time (Hour): ");
     scanf("%d", &self->expectedReturnTime);
 
-    self->totalCostExpected = self->equipmentCost * (self->expectedReturnTime - self->starTime);
+    self->totalCostExpected = self->equipmentCost * (self->expectedReturnTime - self->startTime);
     printf("Amount to be paid upfront: %.2lf\n", self->totalCostExpected);
 
     while (getchar() != '\n'); // Clean buffer
@@ -135,10 +135,15 @@ int inputRental(Rental* self) {
 
 
 // ==========================================
-//             CÁC HÀM NGHIỆP VỤ
+//            Profession Funtions
 // ==========================================
 
 void addEquipment() {
+    if (equipmentCount >= 100) {
+        printf("Error: Equipment storage is full!\n");
+        return;
+    }
+
     Equipment object;
     inputEquipment(&object);
     int foundIDIndex = -1;
@@ -169,8 +174,12 @@ void addEquipment() {
 }
 
 void addClient() {
+    if (clientCount >= 100) {
+        printf("Error: Client list is full!\n");
+        return;
+    }
+
     Client object;
-    
     if (inputClient(&object) == 1) {
         clientList[clientCount] = object;
         clientCount++;
@@ -181,6 +190,11 @@ void addClient() {
 }
 
 void createRentalOrder() {
+    if (rentalCount >= 100) {
+        printf("Error: Rental order limit reached!\n");
+        return;
+    }
+
     Rental object;
     if (inputRental(&object) == 1) {
         rentalList[rentalCount] = object;
@@ -193,8 +207,8 @@ void createRentalOrder() {
     }
 }
 
-void calculateTotalFees(Rental* rental, int actualReturnTime) {
-    double baseRentalFee = (rental->expectedReturnTime - rental->starTime) * rental->equipmentCost;
+double calculateTotalFees(Rental* rental, int actualReturnTime) {
+    double baseRentalFee = (rental->expectedReturnTime - rental->startTime) * rental->equipmentCost;
     
     double penaltyFee = 0;
     if (actualReturnTime > rental->expectedReturnTime) {
@@ -204,6 +218,8 @@ void calculateTotalFees(Rental* rental, int actualReturnTime) {
     
     rental->actualReturnTime = actualReturnTime;
     rental->totalCost = baseRentalFee + penaltyFee;
+    
+    return rental->totalCost;
 }
 
 void returnEquipment() {
@@ -245,7 +261,7 @@ void displayTotalRentalFees() {
 
 
 // ==========================================
-//       PHÂN NHÓM, SẮP XẾP & LƯU FILE
+//       Group, Sorting & Save Files
 // ==========================================
 
 void groupEquipmentByStatus() {
@@ -269,8 +285,8 @@ void groupEquipmentByStatus() {
 void sortRentalsByDuration() {
     for (int i = 0; i < rentalCount - 1; i++) {
         for (int j = i + 1; j < rentalCount; j++) {
-            int durationI = rentalList[i].expectedReturnTime - rentalList[i].starTime;
-            int durationJ = rentalList[j].expectedReturnTime - rentalList[j].starTime;
+            int durationI = rentalList[i].expectedReturnTime - rentalList[i].startTime;
+            int durationJ = rentalList[j].expectedReturnTime - rentalList[j].startTime;
             
             if (durationJ > durationI) {
                 Rental temp = rentalList[i];
@@ -324,10 +340,81 @@ void saveDataToFile() {
     for (int i = 0; i < rentalCount; i++) {
         fprintf(file, "%s|Client:%s|Equip:%s|Start:%d|Expected:%d|Actual:%d|TotalCost:%.2lf\n", 
                 rentalList[i].rentalID, rentalList[i].clientID, rentalList[i].equipmentID, 
-                rentalList[i].starTime, rentalList[i].expectedReturnTime, 
+                rentalList[i].startTime, rentalList[i].expectedReturnTime, 
                 rentalList[i].actualReturnTime, rentalList[i].totalCost);
     }
 
     fclose(file);
     printf("All system data has been successfully saved to 'RentalSystemData.txt'!\n");
+}
+
+void loadFromFile() {
+    FILE* file = fopen("RentalSystemData.txt", "r");
+    if (file == NULL) {
+        printf("Warning: 'RentalSystemData.txt' not found. Starting with empty data.\n");
+        equipmentCount = 0;
+        clientCount = 0;
+        rentalCount = 0;
+        return;
+    }
+
+    char line[256];
+    int mode = 0;
+
+    equipmentCount = 0;
+    clientCount = 0;
+    rentalCount = 0;
+
+    while (fgets(line, sizeof(line), file)) {
+        if (strstr(line, "=== EQUIPMENT DATA")) {
+            mode = 1;
+            continue;
+        } else if (strstr(line, "=== CLIENT DATA")) {
+            mode = 2;
+            continue;
+        } else if (strstr(line, "=== RENTAL ORDER DATA")) {
+            mode = 3;
+            continue;
+        }
+
+        if (line[0] == '\n' || line[0] == '\r' || strstr(line, "===")) {
+            continue;
+        }
+
+        if (mode == 1) {
+            Equipment eq;
+            int parsed = sscanf(line, "%[^|]|%[^|]|%lf|%d", 
+                                eq.id, eq.name, &eq.costPerHour, &eq.remainingEquipment);
+            if (parsed == 4) {
+                equipmentList[equipmentCount++] = eq;
+            }
+        } 
+        else if (mode == 2) {
+            Client cl;
+            int parsed = sscanf(line, "%[^|]| %[^\n]", cl.id, cl.name);
+            if (parsed == 2) {
+                int len = strlen(cl.name);
+                if (len > 0 && cl.name[len - 1] == '\r') cl.name[len - 1] = '\0';
+                
+                clientList[clientCount++] = cl;
+            }
+        } 
+        else if (mode == 3) {
+            Rental rt;
+            int parsed = sscanf(line, "%[^|]|Client:%[^|]|Equip:%[^|]|Start:%d|Expected:%d|Actual:%d|TotalCost:%lf",
+                                rt.rentalID, rt.clientID, rt.equipmentID,
+                                &rt.startTime, &rt.expectedReturnTime, 
+                                &rt.actualReturnTime, &rt.totalCost);
+            if (parsed == 7) {
+                rentalList[rentalCount++] = rt;
+            }
+        }
+    }
+
+    fclose(file);
+    printDivider();
+    printf("Data loaded successfully:\n");
+    printf("- %d Equipments\n", equipmentCount);
+    printf("- %d Clients\n", clientCount);
+    printf("- %d Rental Orders\n", rentalCount);
 }
